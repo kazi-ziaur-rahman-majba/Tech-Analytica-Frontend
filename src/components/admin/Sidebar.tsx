@@ -76,26 +76,14 @@ const Sidebar = ({ sidebarClick }: SidebarProps) => {
         {sidebarClick ? (
           <Link href={"/"}>
             <div className="pt-1 pl-3">
-              <Image
-                src="/logo-sm.png"
-                alt="company logo"
-                width={44}
-                height={44}
-                className="w-11 h-11 object-contain"
-              />
+              <h1>Admin <span className="text-[var(--color-primary)]">Panel</span></h1>
             </div>
           </Link>
         ) : (
           <Link href={"/"}>
             <div className="flex items-center gap-3 pl-4 pt-1">
               <div className="flex items-center rounded-full">
-                <Image
-                  src="/logo.svg"
-                  alt="company logo"
-                  width={44}
-                  height={44}
-                  className="w-44 h-11 object-contain"
-                />
+                <h1>Admin <span className="text-[var(--color-primary)]">Panel</span></h1>
               </div>
             </div>
           </Link>

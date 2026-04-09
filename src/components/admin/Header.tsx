@@ -14,6 +14,8 @@ import { FaCog, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 
+import { showToast } from "@/utils/toast-utils";
+
 type DecodedToken = {
     email?: string;
     role?: string;
@@ -108,6 +110,7 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     const handleLogout = () => {
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        showToast("success", "Logged out successfully!");
         router.replace("/login");
     };
 
@@ -132,16 +135,7 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                 )}
 
                 <div className="flex items-center gap-3 pl-4 pt-1">
-                    <div ref={userImageRef} className="flex items-center rounded-full">
-                        <Image
-                            src="/logo.svg"
-                            alt="company logo"
-                            width={40}
-                            height={40}
-                            className="w-44 h-10 object-contain"
-                        />
-                    </div>
-
+                    <h1>Admin <span className="text-[var(--color-primary)]">Panel</span></h1>
                 </div>
 
                 <div className="relative inline-block">
@@ -169,18 +163,7 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="border-b border-gray-300 pb-2 mb-2">
-                                    <MenuItem
-                                        icon={<FaUserCircle size={15} />}
-                                        text="My Profile"
-                                        className="text-[13px] text-gray-700 font-medium rounded-md hover:text-[var(--color-primary)]"
-                                    />
-                                    <MenuItem
-                                        icon={<FaCog size={15} />}
-                                        text="Settings"
-                                        className="text-[13px] text-gray-700 font-medium rounded-md hover:text-[var(--color-primary)]"
-                                    />
-                                </div>
+                                
 
                                 <MenuItem
                                     icon={<FaSignOutAlt size={15} />}
@@ -360,18 +343,7 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                             </div>
                         </div>
 
-                        <div className="border-b border-gray-300 pb-2 mb-2">
-                            <MenuItem
-                                icon={<FaUserCircle size={15} />}
-                                text="My Profile"
-                                className="text-[13px] text-gray-700 font-medium rounded-md hover:text-[var(--color-primary)]"
-                            />
-                            <MenuItem
-                                icon={<FaCog size={15} />}
-                                text="Settings"
-                                className="text-[13px] text-gray-700 font-medium rounded-md hover:text-[var(--color-primary)]"
-                            />
-                        </div>
+                        
 
                         <MenuItem
                             icon={<FaSignOutAlt size={15} />}

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaUser } from "react-icons/fa";
-import toast from "react-hot-toast";
+import { showToast } from "@/utils/toast-utils";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import api from "@/services/api";
@@ -23,9 +23,10 @@ export default function LoginPage() {
       const role = decoded.role;
       Cookies.set("token", access_token);
       Cookies.set("role", role);
+      showToast("success", "Logged in successfully!");
       router.push("/");
     } catch (error: any) {
-      toast.error("Invalid email or password");
+      showToast("error", "Invalid email or password");
     }
   };
 
