@@ -8,19 +8,17 @@ import api from "@/services/api";
 
 type AuditLog = {
   id: string;
-  timestamp: string;
-  userEmail: string;
-  action: string;
-  details: string;
-  task?: { title: string };
-  assignee?: string;
-  beforeData?: { status: string };
-  afterData?: { status: string };
+  actionType: string;
+  actorEmail: string;
+  taskTitle: string;
+  beforeData?: { status?: string } | null;
+  afterData?: { status?: string; assignedTo?: { email?: string } } | null;
+  createdAt: string;
 };
 
 const formatDetails = (log: AuditLog) => {
-  const taskTitle = log.task?.title || "Unknown task";
-  switch (log.action) {
+  const taskTitle = log.taskTitle || "Unknown task";
+  switch (log.actionType) {
     case "TASK_CREATED":
       return `Task Created: ${taskTitle}`;
     case "TASK_UPDATED":
@@ -28,11 +26,28 @@ const formatDetails = (log: AuditLog) => {
     case "TASK_DELETED":
       return `Task Deleted: ${taskTitle}`;
     case "TASK_ASSIGNED":
-      return `Task Assigned: ${taskTitle} to ${log.assignee || "Unknown assignee"}`;
+      return `Task Assigned: ${taskTitle} to ${log.afterData?.assignedTo?.email || "Unknown assignee"}`;
     case "STATUS_CHANGED":
       return `Status Changed: ${taskTitle} from ${log.beforeData?.status || "Unknown"} to ${log.afterData?.status || "Unknown"}`;
     default:
-      return log.details;
+      return taskTitle;
+  }
+};
+
+const formatTimestamp = (value: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+};
+
+const parseJsonField = (value: unknown) => {
+  if (!value) return null;
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
   }
 };
 
@@ -44,7 +59,16 @@ const AuditLogPage = () => {
     setLoading(true);
     try {
       const response = await api.get("/audit-logs");
-      setAuditLogs(response.data || []);
+      const normalizedLogs = (response.data || []).map((item: any) => ({
+        id: item.id,
+        actionType: item.actionType,
+        actorEmail: item.actorEmail,
+        taskTitle: item.taskTitle,
+        beforeData: parseJsonField(item.beforeData),
+        afterData: parseJsonField(item.afterData),
+        createdAt: item.createdAt,
+      }));
+      setAuditLogs(normalizedLogs);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to fetch audit logs");
     } finally {
@@ -86,9 +110,9 @@ const AuditLogPage = () => {
             ) : (
               auditLogs.map((log) => (
                 <tr key={log.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
-                  <td className="px-4 py-4 align-top text-sm text-gray-700">{log.timestamp}</td>
-                  <td className="px-4 py-4 align-top text-sm text-gray-900">{log.userEmail}</td>
-                  <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">{log.action}</td>
+                  <td className="px-4 py-4 align-top text-sm text-gray-700">{formatTimestamp(log.createdAt)}</td>
+                  <td className="px-4 py-4 align-top text-sm text-gray-900">{log.actorEmail}</td>
+                  <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">{log.actionType}</td>
                   <td className="px-4 py-4 align-top text-sm text-gray-600">{formatDetails(log)}</td>
                 </tr>
               ))

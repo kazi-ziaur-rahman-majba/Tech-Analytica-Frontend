@@ -64,9 +64,12 @@ const Tasks = () => {
   const fetchUsers = async () => {
     try {
       const response = await api.get("/users");
-      setUsers(response.data || []);
+      const fetchedUsers = response.data || [];
+      setUsers(fetchedUsers);
+      return fetchedUsers as User[];
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to fetch users");
+      return [] as User[];
     }
   };
 
@@ -77,15 +80,17 @@ const Tasks = () => {
     loadInitialData();
   }, []);
 
-  const openCreateModal = () => {
+  const openCreateModal = async () => {
+    const fetchedUsers = await fetchUsers();
     setActiveTask(null);
     setFormTitle("");
     setFormDescription("");
-    setFormAssigneeId(users[0]?.id || "");
+    setFormAssigneeId(fetchedUsers[0]?.id || "");
     setIsModalOpen(true);
   };
 
-  const openEditModal = (task: Task) => {
+  const openEditModal = async (task: Task) => {
+    await fetchUsers();
     setActiveTask(task);
     setFormTitle(task.title);
     setFormDescription(task.description);
@@ -120,6 +125,8 @@ const Tasks = () => {
           description: formDescription,
           assignedToId: formAssigneeId,
         });
+        closeModal();
+        await fetchTasks();
         toast.success("Task updated successfully!");
       } else {
         await api.post("/tasks", {
@@ -127,10 +134,10 @@ const Tasks = () => {
           description: formDescription,
           assignedToId: formAssigneeId,
         });
+        closeModal();
+        await fetchTasks();
         toast.success("Task created successfully!");
       }
-      await fetchTasks();
-      closeModal();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to save task");
     }
@@ -195,7 +202,7 @@ const Tasks = () => {
                       <p className="mt-1 text-sm text-gray-600">{task.description}</p>
                     </td>
                     <td className="px-4 py-4 align-top">
-                      <div className="text-sm font-medium text-gray-900">{assignee?.name || "Unknown"}</div>
+                      <div className="text-sm font-medium text-gray-900">{assignee?.name || "User"}</div>
                       <div className="text-xs text-gray-500">{assignee?.email || "-"}</div>
                     </td>
                     <td className="px-4 py-4 align-top">
@@ -276,7 +283,7 @@ const Tasks = () => {
             >
               {users.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.name} ({user.email})
+                  {user.email}
                 </option>
               ))}
             </select>

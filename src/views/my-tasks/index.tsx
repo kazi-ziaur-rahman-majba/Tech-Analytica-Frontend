@@ -128,7 +128,10 @@ const MyTasksPage = () => {
               {!loading &&
                 tasks.map((task) => (
                   <tr key={task.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
-                    <td className="px-4 py-4 align-top text-sm font-medium text-gray-900">{task.title}</td>
+                    <td className="px-4 py-4 align-top text-sm font-medium text-gray-900">
+                      <div>{task.title}</div>
+                      
+                    </td>
                     <td className="px-4 py-4 align-top text-sm text-gray-700">{task.description}</td>
                     <td className="px-4 py-4 align-top">
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[task.status]}`}>

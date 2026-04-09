@@ -13,6 +13,12 @@ import { MotionDiv } from "@/utils/framer.motion";
 import { FaCog, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import Image from "next/image";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+
+type DecodedToken = {
+    email?: string;
+    role?: string;
+};
 
 const MenuItem = ({
     icon,
@@ -39,6 +45,8 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [showMenuDropdown, setShowMenuDropdown] = useState(false);
     const [openSubMenu, setOpenSubMenu] = useState<number | null>(null);
+    const [userEmail, setUserEmail] = useState("Unknown User");
+    const [userRole, setUserRole] = useState("User");
     const dropdownRef = useRef<HTMLDivElement>(null);
     const userImageRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +66,25 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
+    }, []);
+
+    useEffect(() => {
+        const token = Cookies.get("token");
+        const roleFromCookie = Cookies.get("role");
+        if (!token) {
+            setUserEmail("Unknown User");
+            setUserRole(roleFromCookie === "ADMIN" ? "Admin" : "User");
+            return;
+        }
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            setUserEmail(decoded.email || "Unknown User");
+            setUserRole((decoded.role || roleFromCookie) === "ADMIN" ? "Admin" : "User");
+        } catch {
+            setUserEmail("Unknown User");
+            setUserRole(roleFromCookie === "ADMIN" ? "Admin" : "User");
+        }
     }, []);
 
     const toggleSubMenu = (id: number) => {
@@ -128,10 +155,10 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                                     />
                                     <div>
                                         <p className="text-[15px] font-semibold text-gray-800">
-                                            Zubayer Farazi
+                                            {userEmail}
                                         </p>
                                         <p className="text-[12px] text-gray-500 capitalize">
-                                            Super Admin
+                                            {userRole}
                                         </p>
                                     </div>
                                 </div>
@@ -297,8 +324,8 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                                 className="w-[40px] h-[40px] rounded-lg"
                             />
                             <div>
-                                <p className="text-[15px] font-semibold text-gray-800">Zubayer Farazi</p>
-                                <p className="text-[12px] text-gray-500 capitalize">Super Admin</p>
+                                <p className="text-[15px] font-semibold text-gray-800">{userEmail}</p>
+                                <p className="text-[12px] text-gray-500 capitalize">{userRole}</p>
                             </div>
                         </MotionDiv>
                     </div>
@@ -321,8 +348,8 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                                 className="w-[45px] h-[45px] rounded-full border border-gray-200"
                             />
                             <div>
-                                <p className="text-[15px] font-semibold text-gray-800">Zubayer Farazi</p>
-                                <p className="text-[12px] text-gray-500 capitalize">Super Admin</p>
+                                <p className="text-[15px] font-semibold text-gray-800">{userEmail}</p>
+                                <p className="text-[12px] text-gray-500 capitalize">{userRole}</p>
                             </div>
                         </div>
 
