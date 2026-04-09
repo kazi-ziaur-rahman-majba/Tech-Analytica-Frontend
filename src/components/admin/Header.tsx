@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
-import { menu } from "@/navigation/sidebar";
+import { getMenuByRole } from "@/navigation/sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { RiArrowDropDownLine, RiArrowDropRightLine } from "react-icons/ri";
@@ -12,7 +12,6 @@ import { GoDotFill } from "react-icons/go";
 import { MotionDiv } from "@/utils/framer.motion";
 import { FaCog, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import Image from "next/image";
-import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
 type DecodedToken = {
@@ -69,8 +68,14 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     }, []);
 
     useEffect(() => {
-        const token = Cookies.get("token");
-        const roleFromCookie = Cookies.get("role");
+        const token = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("token="))
+            ?.split("=")[1];
+        const roleFromCookie = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("role="))
+            ?.split("=")[1];
         if (!token) {
             setUserEmail("Unknown User");
             setUserRole(roleFromCookie === "ADMIN" ? "Admin" : "User");
@@ -87,6 +92,8 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
         }
     }, []);
 
+    const filteredMenu = getMenuByRole(userRole.toUpperCase());
+
     const toggleSubMenu = (id: number) => {
         setOpenSubMenu(openSubMenu === id ? null : id);
     };
@@ -99,8 +106,8 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     };
 
     const handleLogout = () => {
-        Cookies.remove("token");
-        Cookies.remove("role");
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         router.replace("/login");
     };
 
@@ -193,7 +200,7 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
                             }`}
                     >
                         <div className="p-4">
-                            {menu.map((section) => (
+                            {filteredMenu.map((section) => (
                                 <div key={section.sectionName} className="p-2 mb-2">
                                     <p className="text-[12px] text-[#092c4c] font-bold mb-2">
                                         {section.sectionName}

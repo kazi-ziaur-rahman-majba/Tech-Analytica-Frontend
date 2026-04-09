@@ -2,25 +2,34 @@
 import { useEffect, useState } from "react";
 import { RiArrowDropRightLine, RiArrowDropDownLine } from "react-icons/ri";
 import Link from "next/link";
-import { menu } from "@/navigation/sidebar";
+import { getMenuByRole, type MenuItem } from "@/navigation/sidebar";
 import { usePathname, useRouter } from "next/navigation";
 import { MotionDiv } from "@/utils/framer.motion";
 import Image from "next/image";
 
 type SidebarProps = {
   sidebarClick: boolean;
-  setSidebarClick: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Sidebar = ({ sidebarClick, setSidebarClick }: SidebarProps) => {
+const Sidebar = ({ sidebarClick }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState("ADMIN");
+  const filteredMenu = getMenuByRole(role);
 
   const [openSubMenu, setOpenSubMenu] = useState<number | null>(null);
 
   useEffect(() => {
+    const userRole = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("role="))
+      ?.split("=")[1];
+    setRole(userRole || "ADMIN");
+  }, []);
+
+  useEffect(() => {
     if (!sidebarClick) {
-      menu.forEach((section) => {
+      filteredMenu.forEach((section) => {
         section.items.forEach((item) => {
           if (
             item.subItems?.some((sub) => sub.path === pathname) ||
@@ -33,21 +42,19 @@ const Sidebar = ({ sidebarClick, setSidebarClick }: SidebarProps) => {
     } else {
       setOpenSubMenu(null);
     }
-  }, [pathname, sidebarClick]);
+  }, [pathname, sidebarClick, filteredMenu]);
 
   const toggleSubMenu = (id: number) => {
     setOpenSubMenu((prev) => (prev === id ? null : id));
   };
 
-  const isAnySubmenuActive = menu.some((section) =>
+  const isAnySubmenuActive = filteredMenu.some((section) =>
     section.items.some((menuItem) =>
       menuItem.subItems?.some((subItem) => subItem.path === pathname)
     )
   );
 
-  const handleSidebarClick = () => setSidebarClick((s: any) => !s);
-
-  const handleParentItemClick = (item: any) => {
+  const handleParentItemClick = (item: MenuItem) => {
     if (sidebarClick) {
       const target =
         item.path ||
@@ -100,7 +107,7 @@ const Sidebar = ({ sidebarClick, setSidebarClick }: SidebarProps) => {
           className={`p-2 mt-3 max-h-[90vh] fixed ${sidebarClick ? "w-28" : "w-61"
             } overflow-hidden border-t border-gray-200 hover:overflow-y-auto custom-scrollbar`}
         >
-          {menu.map((section) => (
+          {filteredMenu.map((section) => (
             <div key={section.sectionName} className={`p-2 ${sidebarClick ? "mb-0" : "mb-2"}`}>
               <p className={`text-xs text-[#092c4c] font-bold ${sidebarClick ? "mb-0" : "mb-2"}`}>
                 {sidebarClick ? "" : section.sectionName}
@@ -108,7 +115,7 @@ const Sidebar = ({ sidebarClick, setSidebarClick }: SidebarProps) => {
 
               {section.items.map((item) => {
                 const isParentActive = item.subItems?.some(
-                  (subItem: any) => subItem.path === pathname
+                  (subItem) => subItem.path === pathname
                 );
                 const isItemActive = item.path === pathname;
                 const isOpen = openSubMenu === item.id;

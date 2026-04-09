@@ -1,12 +1,25 @@
 import {
 	FaThLarge,
 	FaListUl,
-
 	FaAddressBook,
-
 } from "react-icons/fa";
+import type { IconType } from "react-icons";
 
-export const menu = [
+export type MenuItem = {
+  id: number;
+  name: string;
+  title: string;
+  icon: IconType;
+  path: string;
+  subItems: Array<{ id: number; name: string; path: string }>;
+};
+
+export type MenuSection = {
+  sectionName: string;
+  items: MenuItem[];
+};
+
+const adminMenu: MenuSection[] = [
   {
     sectionName: "Main",
     items: [
@@ -15,7 +28,7 @@ export const menu = [
         name: "Dashboard",
         title: "Dashboard",
         icon: FaThLarge,
-        path: "/tasks",
+        path: "/",
         subItems: [],
       },
     ],
@@ -42,3 +55,24 @@ export const menu = [
     ],
   },
 ];
+
+const userMenu: MenuSection[] = [
+  {
+    sectionName: "Tasks",
+    items: [
+      {
+        id: 2,
+        name: "Tasks",
+        title: "Tasks",
+        icon: FaListUl,
+        path: "/my-tasks",
+        subItems: [],
+      },
+    ],
+  },
+];
+
+export const getMenuByRole = (role?: string): MenuSection[] =>
+  role === "USER" ? userMenu : adminMenu;
+
+export const menu = adminMenu;

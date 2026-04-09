@@ -18,8 +18,8 @@ export function middleware(request: NextRequest) {
 
   // Role-based redirects
   if (role === 'ADMIN') {
-    if (pathname === '/' || pathname.startsWith('/my-tasks')) {
-      return NextResponse.redirect(new URL('/tasks', request.url));
+    if (pathname.startsWith('/my-tasks')) {
+      return NextResponse.redirect(new URL('/', request.url));
     }
   } else if (role === 'USER') {
     if (pathname === '/') {

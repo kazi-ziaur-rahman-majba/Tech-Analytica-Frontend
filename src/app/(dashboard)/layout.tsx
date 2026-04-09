@@ -4,7 +4,6 @@ import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header";
 import { useState } from "react";
 import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight } from "react-icons/md";
-import Footer from "@/components/admin/Footer";
 
 export default function AdminLayout({
 	children,
@@ -34,7 +33,6 @@ export default function AdminLayout({
 
 			<Sidebar
 				sidebarClick={sidebarClick}
-				setSidebarClick={setSidebarClick}
 			/>
 
 			<div className="flex flex-col flex-1">
