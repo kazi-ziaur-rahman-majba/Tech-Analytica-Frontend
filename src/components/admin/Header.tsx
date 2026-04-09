@@ -6,12 +6,13 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
 import { menu } from "@/navigation/sidebar";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { RiArrowDropDownLine, RiArrowDropRightLine } from "react-icons/ri";
 import { GoDotFill } from "react-icons/go";
 import { MotionDiv } from "@/utils/framer.motion";
 import { FaCog, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import Image from "next/image";
+import Cookies from "js-cookie";
 
 const MenuItem = ({
     icon,
@@ -32,6 +33,7 @@ const MenuItem = ({
 
 const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     const pathname = usePathname();
+    const router = useRouter();
     const [showSidebar, setShowSidebar] = useState(false);
     const [showSidebarMenu, setShowSidebarMenu] = useState(false);
     const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -70,7 +72,9 @@ const Header = ({ sidebarClick }: { sidebarClick: boolean }) => {
     };
 
     const handleLogout = () => {
-        alert("Logged Out!")
+        Cookies.remove("token");
+        Cookies.remove("role");
+        router.replace("/login");
     };
 
     return (

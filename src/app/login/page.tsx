@@ -2,28 +2,32 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaUser } from "react-icons/fa";
+import toast from "react-hot-toast";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import api from "@/services/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/tasks";
 
-  //   async function handleSubmit(e: React.FormEvent) {
-  //     e.preventDefault();
-  //     const res = await fetch("/api/auth/login", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ email, password }),
-  //     });
-
-  //     if (res.ok) {
-  //       router.push(callbackUrl);
-  //     } else {
-  //       alert("Invalid credentials");
-  //     }
-  //   }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      const { access_token } = response.data;
+      const decoded: any = jwtDecode(access_token);
+      const role = decoded.role;
+      Cookies.set("token", access_token);
+      Cookies.set("role", role);
+      router.push("/");
+    } catch (error: any) {
+      toast.error("Invalid email or password");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FCEFEA] via-[#fff] to-[#E04F16]/10 p-4">
@@ -47,7 +51,7 @@ export default function LoginPage() {
           Enter your credentials to continue.
         </p>
 
-        <form className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Email */}
           <div className="relative">
             <input

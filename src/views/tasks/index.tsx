@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import toast from "react-hot-toast";
 import Button from "@/components/button/Button";
 import PageHeader from "@/components/page-header/PageHeader";
 import Modal from "@/components/modal/Modal";
 import DeleteModal from "@/components/modal/DeleteModal";
 import RefreshButton from "@/components/table-components/RefreshButton";
 import Footer from "@/components/admin/Footer";
+import api from "@/services/api";
 
 type User = {
   id: string;
@@ -21,71 +23,9 @@ type Task = {
   id: string;
   title: string;
   description: string;
-  assigneeId: string;
+  assignedToId: string;
   status: TaskStatus;
 };
-
-type AuditLog = {
-  id: string;
-  timestamp: string;
-  userEmail: string;
-  action: string;
-  details: string;
-};
-
-const users: User[] = [
-  { id: "u1", name: "Raihan Ahmed", email: "raihan@example.com" },
-  { id: "u2", name: "Nadia Karim", email: "nadia@example.com" },
-  { id: "u3", name: "Bipasha Sultana", email: "bipasha@example.com" },
-];
-
-const initialTasks: Task[] = [
-  {
-    id: "t1",
-    title: "Fix Checkout Bug",
-    description: "Resolve issue with payment gateway validation.",
-    assigneeId: "u1",
-    status: "PENDING",
-  },
-  {
-    id: "t2",
-    title: "Update Landing Page",
-    description: "Refresh hero section content and CTA.",
-    assigneeId: "u2",
-    status: "PROCESSING",
-  },
-  {
-    id: "t3",
-    title: "Deploy New Release",
-    description: "Push the latest feature branch to staging.",
-    assigneeId: "u3",
-    status: "DONE",
-  },
-];
-
-const initialAuditLogs: AuditLog[] = [
-  {
-    id: "a1",
-    timestamp: "2026-04-09 10:24:12",
-    userEmail: "raihan@example.com",
-    action: "TASK_CREATED",
-    details: "Task Created: Fix Checkout Bug",
-  },
-  {
-    id: "a2",
-    timestamp: "2026-04-09 12:05:01",
-    userEmail: "nadia@example.com",
-    action: "TASK_UPDATED",
-    details: "Task Updated: Update Landing Page",
-  },
-  {
-    id: "a3",
-    timestamp: "2026-04-09 13:42:50",
-    userEmail: "bipasha@example.com",
-    action: "TASK_COMPLETED",
-    details: "Task Completed: Deploy New Release",
-  },
-];
 
 const statusStyles: Record<TaskStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-900",
@@ -94,27 +34,54 @@ const statusStyles: Record<TaskStatus, string> = {
 };
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(initialAuditLogs);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formAssigneeId, setFormAssigneeId] = useState(users[0].id);
-  const [formStatus, setFormStatus] = useState<TaskStatus>("PENDING");
+  const [formAssigneeId, setFormAssigneeId] = useState("");
 
-  const selectedAssignee = useMemo(
-    () => users.find((user) => user.id === formAssigneeId) ?? users[0],
-    [formAssigneeId]
-  );
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/tasks");
+      const normalizedTasks = (response.data || []).map((task: any) => ({
+        ...task,
+        assignedToId: task.assignedToId ?? task.assigneeId ?? task.assignedTo?.id ?? "",
+      }));
+      setTasks(normalizedTasks);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch tasks");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get("/users");
+      setUsers(response.data || []);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch users");
+    }
+  };
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await Promise.all([fetchTasks(), fetchUsers()]);
+    };
+    loadInitialData();
+  }, []);
 
   const openCreateModal = () => {
     setActiveTask(null);
     setFormTitle("");
     setFormDescription("");
-    setFormAssigneeId(users[0].id);
-    setFormStatus("PENDING");
+    setFormAssigneeId(users[0]?.id || "");
     setIsModalOpen(true);
   };
 
@@ -122,8 +89,7 @@ const Tasks = () => {
     setActiveTask(task);
     setFormTitle(task.title);
     setFormDescription(task.description);
-    setFormAssigneeId(task.assigneeId);
-    setFormStatus(task.status);
+    setFormAssigneeId(task.assignedToId);
     setIsModalOpen(true);
   };
 
@@ -142,49 +108,44 @@ const Tasks = () => {
     setActiveTask(null);
   };
 
-  const addAuditLog = (action: string, details: string) => {
-    const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-    setAuditLogs((current) => [
-      { id: `a-${Date.now()}`, timestamp, userEmail: selectedAssignee.email, action, details },
-      ...current,
-    ]);
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formTitle.trim() || !formDescription.trim()) {
       return;
     }
 
-    if (activeTask) {
-      const updatedTask: Task = {
-        ...activeTask,
-        title: formTitle,
-        description: formDescription,
-        assigneeId: formAssigneeId,
-        status: formStatus,
-      };
-      setTasks((current) => current.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
-      addAuditLog("TASK_UPDATED", `Task Updated: ${updatedTask.title}`);
-    } else {
-      const newTask: Task = {
-        id: `t-${Date.now()}`,
-        title: formTitle,
-        description: formDescription,
-        assigneeId: formAssigneeId,
-        status: "PENDING",
-      };
-      setTasks((current) => [newTask, ...current]);
-      addAuditLog("TASK_CREATED", `Task Created: ${newTask.title}`);
+    try {
+      if (activeTask) {
+        await api.patch(`/tasks/${activeTask.id}`, {
+          title: formTitle,
+          description: formDescription,
+          assignedToId: formAssigneeId,
+        });
+        toast.success("Task updated successfully!");
+      } else {
+        await api.post("/tasks", {
+          title: formTitle,
+          description: formDescription,
+          assignedToId: formAssigneeId,
+        });
+        toast.success("Task created successfully!");
+      }
+      await fetchTasks();
+      closeModal();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to save task");
     }
-
-    closeModal();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!activeTask) return;
-    setTasks((current) => current.filter((task) => task.id !== activeTask.id));
-    addAuditLog("TASK_DELETED", `Task Deleted: ${activeTask.title}`);
-    closeDeleteDialog();
+    try {
+      await api.delete(`/tasks/${activeTask.id}`);
+      await fetchTasks();
+      toast.success("Task deleted successfully!");
+      closeDeleteDialog();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete task");
+    }
   };
 
   return (
@@ -196,7 +157,7 @@ const Tasks = () => {
             headerDescription="Manage task assignments, statuses, and approvals."
           />
           <div className="flex items-center gap-2">
-            <RefreshButton onClick={() => {}} />
+            <RefreshButton onClick={fetchTasks} />
             <Button
               label="Add Task"
               onClick={openCreateModal}
@@ -218,8 +179,15 @@ const Tasks = () => {
               </tr>
             </thead>
             <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                    Loading...
+                  </td>
+                </tr>
+              )}
               {tasks.map((task) => {
-                const assignee = users.find((user) => user.id === task.assigneeId);
+                const assignee = users.find((user) => user.id === task.assignedToId);
                 return (
                   <tr key={task.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
                     <td className="px-4 py-4 align-top">
@@ -313,20 +281,6 @@ const Tasks = () => {
               ))}
             </select>
           </div>
-          {activeTask && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                value={formStatus}
-                onChange={(event) => setFormStatus(event.target.value as TaskStatus)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[rgba(224,79,22,0.15)]"
-              >
-                <option value="PENDING">PENDING</option>
-                <option value="PROCESSING">PROCESSING</option>
-                <option value="DONE">DONE</option>
-              </select>
-            </div>
-          )}
         </div>
       </Modal>
 

@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import PageHeader from "@/components/page-header/PageHeader";
 import RefreshButton from "@/components/table-components/RefreshButton";
+import api from "@/services/api";
 
 type AuditLog = {
   id: string;
@@ -9,33 +12,50 @@ type AuditLog = {
   userEmail: string;
   action: string;
   details: string;
+  task?: { title: string };
+  assignee?: string;
+  beforeData?: { status: string };
+  afterData?: { status: string };
 };
 
-const auditLogs: AuditLog[] = [
-  {
-    id: "a1",
-    timestamp: "2026-04-09 10:24:12",
-    userEmail: "raihan@example.com",
-    action: "TASK_CREATED",
-    details: "Task Created: Fix Checkout Bug",
-  },
-  {
-    id: "a2",
-    timestamp: "2026-04-09 12:05:01",
-    userEmail: "nadia@example.com",
-    action: "TASK_UPDATED",
-    details: "Task Updated: Update Landing Page",
-  },
-  {
-    id: "a3",
-    timestamp: "2026-04-09 13:42:50",
-    userEmail: "bipasha@example.com",
-    action: "TASK_COMPLETED",
-    details: "Task Completed: Deploy New Release",
-  },
-];
+const formatDetails = (log: AuditLog) => {
+  const taskTitle = log.task?.title || "Unknown task";
+  switch (log.action) {
+    case "TASK_CREATED":
+      return `Task Created: ${taskTitle}`;
+    case "TASK_UPDATED":
+      return `Task Updated: ${taskTitle}`;
+    case "TASK_DELETED":
+      return `Task Deleted: ${taskTitle}`;
+    case "TASK_ASSIGNED":
+      return `Task Assigned: ${taskTitle} to ${log.assignee || "Unknown assignee"}`;
+    case "STATUS_CHANGED":
+      return `Status Changed: ${taskTitle} from ${log.beforeData?.status || "Unknown"} to ${log.afterData?.status || "Unknown"}`;
+    default:
+      return log.details;
+  }
+};
 
 const AuditLogPage = () => {
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAuditLogs = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/audit-logs");
+      setAuditLogs(response.data || []);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch audit logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, []);
+
   return (
     <div className="flex flex-col gap-6 min-h-screen p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -43,7 +63,7 @@ const AuditLogPage = () => {
           headerTitle="Audit Logs"
           headerDescription="View task audit history with timestamps, actors, and human-readable details."
         />
-        <RefreshButton onClick={() => {}} />
+        <RefreshButton onClick={fetchAuditLogs} />
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -57,15 +77,23 @@ const AuditLogPage = () => {
             </tr>
           </thead>
           <tbody>
-            {auditLogs.map((log) => (
-              <tr key={log.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
-                <td className="px-4 py-4 align-top text-sm text-gray-700">{log.timestamp}</td>
-                <td className="px-4 py-4 align-top text-sm text-gray-900">{log.userEmail}</td>
-                <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">{log.action}</td>
-                <td className="px-4 py-4 align-top text-sm text-gray-600">{log.details}</td>
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
+                  Loading...
+                </td>
               </tr>
-            ))}
-            {auditLogs.length === 0 && (
+            ) : (
+              auditLogs.map((log) => (
+                <tr key={log.id} className="border-t border-gray-100 hover:bg-gray-50 transition">
+                  <td className="px-4 py-4 align-top text-sm text-gray-700">{log.timestamp}</td>
+                  <td className="px-4 py-4 align-top text-sm text-gray-900">{log.userEmail}</td>
+                  <td className="px-4 py-4 align-top text-sm font-semibold text-gray-900">{log.action}</td>
+                  <td className="px-4 py-4 align-top text-sm text-gray-600">{formatDetails(log)}</td>
+                </tr>
+              ))
+            )}
+            {!loading && auditLogs.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                   No audit logs available.
