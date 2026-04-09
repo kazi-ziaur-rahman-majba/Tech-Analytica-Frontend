@@ -1,6 +1,6 @@
 import PageHeader from "@/components/page-header/PageHeader";
-import PageCmsForm from "./components/PageCms";
 import Footer from "@/components/admin/Footer";
+import PageCmsForm from "./component/PageCms";
 
 const HomePageCMS = () => {
     return (

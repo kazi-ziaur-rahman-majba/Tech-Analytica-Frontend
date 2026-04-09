@@ -1,6 +1,7 @@
 "use client";
 
 import PageHeader from "@/components/page-header/PageHeader";
+import RefreshButton from "@/components/table-components/RefreshButton";
 
 type AuditLog = {
   id: string;
@@ -37,19 +38,22 @@ const auditLogs: AuditLog[] = [
 const AuditLogPage = () => {
   return (
     <div className="flex flex-col gap-6 min-h-screen p-6">
-      <PageHeader
-        headerTitle="Audit Logs"
-        headerDescription="View task audit history with timestamps, actors, and human-readable details."
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader
+          headerTitle="Audit Logs"
+          headerDescription="View task audit history with timestamps, actors, and human-readable details."
+        />
+        <RefreshButton onClick={() => {}} />
+      </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full min-w-[720px] text-left border-collapse">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-sm font-semibold text-gray-700">Timestamp</th>
-              <th className="px-4 py-3 text-sm font-semibold text-gray-700">User</th>
-              <th className="px-4 py-3 text-sm font-semibold text-gray-700">Action</th>
-              <th className="px-4 py-3 text-sm font-semibold text-gray-700">Details</th>
+          <thead className="bg-[var(--primary-color-light)]">
+            <tr className="text-sm border-b border-gray-200">
+              <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">Timestamp</th>
+              <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">User</th>
+              <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">Action</th>
+              <th className="px-6 py-3 text-center text-[#000000e0]">Details</th>
             </tr>
           </thead>
           <tbody>

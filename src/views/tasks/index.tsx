@@ -6,6 +6,7 @@ import Button from "@/components/button/Button";
 import PageHeader from "@/components/page-header/PageHeader";
 import Modal from "@/components/modal/Modal";
 import DeleteModal from "@/components/modal/DeleteModal";
+import RefreshButton from "@/components/table-components/RefreshButton";
 import Footer from "@/components/admin/Footer";
 
 type User = {
@@ -194,23 +195,26 @@ const Tasks = () => {
             headerTitle="Tasks"
             headerDescription="Manage task assignments, statuses, and approvals."
           />
-          <Button
-            label="Add Task"
-            onClick={openCreateModal}
-            color="var(--color-primary)"
-            hoverColor="var(--color-primary-hover)"
-            icon={<FaPlus size={16} />}
-          />
+          <div className="flex items-center gap-2">
+            <RefreshButton onClick={() => {}} />
+            <Button
+              label="Add Task"
+              onClick={openCreateModal}
+              color="var(--color-primary)"
+              hoverColor="var(--color-primary-hover)"
+              icon={<FaPlus size={16} />}
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
           <table className="w-full min-w-[720px] text-left border-collapse">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-sm font-semibold text-gray-700">Title</th>
-                <th className="px-4 py-3 text-sm font-semibold text-gray-700">Assignee</th>
-                <th className="px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
-                <th className="px-4 py-3 text-sm font-semibold text-gray-700">Actions</th>
+            <thead className="bg-[var(--primary-color-light)]">
+              <tr className="text-sm border-b border-gray-200">
+                <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">Title</th>
+                <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">Assignee</th>
+                <th className="px-6 py-3 border-r border-gray-200 text-start text-[#000000e0]">Status</th>
+                <th className="px-6 py-3 text-start text-[#000000e0]">Actions</th>
               </tr>
             </thead>
             <tbody>
